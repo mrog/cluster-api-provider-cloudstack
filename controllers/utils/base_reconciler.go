@@ -73,6 +73,7 @@ type ReconciliationRunner struct {
 	Reconcile              CloudStackReconcilerMethod
 	CSUser                 cloud.Client
 	ControllerKind         string
+	IgnorePause            bool
 }
 
 type ConcreteRunner interface {
@@ -89,6 +90,7 @@ func NewRunner(concreteRunner ConcreteRunner, subject client.Object, kind string
 	r.Reconcile = concreteRunner.Reconcile
 	r.ReconcileDelete = concreteRunner.ReconcileDelete
 	r.ControllerKind = kind
+	r.IgnorePause = false
 	return &r
 }
 
@@ -401,7 +403,7 @@ func (r *ReconciliationRunner) RunBaseReconciliationStages() (res ctrl.Result, r
 		r.GetCAPICluster,
 		r.GetCSCluster,
 		r.RequeueIfMissingBaseCRs,
-		r.CheckIfPaused}
+		r.RunIf(func() bool { return !r.IgnorePause }, r.CheckIfPaused)}
 	baseStages = append(
 		append(baseStages, r.additionalCommonStages...),
 		r.RunIf(func() bool { return r.ReconciliationSubject.GetDeletionTimestamp().IsZero() }, r.Reconcile),

@@ -1,4 +1,3 @@
-
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -33,6 +32,12 @@ rules:
   - get
   - list
   - watch
+- apiGroups:
+  - cluster.x-k8s.io
+  resources:
+  - clusters
+  verbs:
+  - update
 - apiGroups:
   - cluster.x-k8s.io
   resources:
