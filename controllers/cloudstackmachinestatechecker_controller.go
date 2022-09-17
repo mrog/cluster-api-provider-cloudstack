@@ -18,7 +18,6 @@ package controllers
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sigs.k8s.io/cluster-api/util/annotations"
 	"strings"
@@ -230,7 +229,7 @@ func (r *CloudStackMachineStateCheckerReconciliationRunner) clusterHasLockForCur
 func (r *CloudStackMachineStateCheckerReconciliationRunner) getClusterLocks() map[string]string {
 	locks := map[string]string{}
 	for key, value := range r.CAPICluster.Annotations {
-		if strings.HasSuffix(key, capcLockAnnotationPrefix) {
+		if strings.HasPrefix(key, capcLockAnnotationPrefix) {
 			locks[key] = value
 		}
 	}
@@ -268,6 +267,7 @@ func (r *CloudStackMachineStateCheckerReconciliationRunner) removeOrphanedCluste
 			// Don't remove this lock because another machine state checker still needs it.
 			continue
 		}
+		r.Log.Info("Found orphaned cluster lock", "key", key)
 		delete(r.CAPICluster.Annotations, key)
 		clusterModified = true
 		lockCount--
@@ -282,7 +282,7 @@ func (r *CloudStackMachineStateCheckerReconciliationRunner) removeOrphanedCluste
 		if err != nil {
 			return err
 		}
-		return errors.New(fmt.Sprintf("orphaned lock(s) found and removed from cluster %s", r.CAPICluster.Name))
+		return fmt.Errorf("orphaned lock(s) found and removed from cluster %s", r.CAPICluster.Name)
 	}
 	return nil
 }
